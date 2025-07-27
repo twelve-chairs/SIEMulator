@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<head>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/css/bootstrap.min.css" rel="stylesheet"
+          integrity="sha384-LN+7fdVzj6u52u30Kp6M/trliBMCMKTyK833zpbD+pXdCLuTusPj697FH4R/5mcr" crossorigin="anonymous">
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.7/dist/js/bootstrap.bundle.min.js"
+            integrity="sha384-ndDqU0Gzau9qJ1lfW4pNLlhNTkCfHzAVBReH9diLvGRem5+R9g2FzA8ZGN954O5Q"
+            crossorigin="anonymous"></script>
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
+          integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY="
+          crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
+            integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo="
+            crossorigin=""></script>
+
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/MarkerCluster.Default.css"
+          rel="stylesheet">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/leaflet.markercluster/1.5.3/leaflet.markercluster.js"></script>
+
+    <script src="https://d3js.org/d3.v5.min.js"></script>
+
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.20/c3.css"
+          integrity="sha512-GQSxWe9Cj4o4EduO7zO9HjULmD4olIjiQqZ7VJuwBxZlkWaUFGCxRkn39jYnD2xZBtEilm0m4WBG7YEmQuMs5Q=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/c3/0.7.20/c3.min.js"
+            integrity="sha512-+IpCthlNahOuERYUSnKFjzjdKXIbJ/7Dd6xvUp+7bEw0Jp2dg6tluyxLs+zq9BMzZgrLv8886T4cBSqnKiVgUw=="
+            crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
+    <title>Final Project: SIEMulator</title>
+    <style>
+        .circle {
+            height: 15px;
+            width: 15px;
+            border-radius: 50%;
+            display: inline-block;
+        }
+
+        .title-card {
+            text-align: center;
+            font-weight: bold;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            padding: 10px;
+            font-size: 16px;
+            box-shadow: 0 0 10px #c2c2c2;
+        }
+
+        .scroll {
+            max-height: 200px;
+            overflow-y: auto;
+            margin-top: 10px;
+            margin-bottom: 10px;
+            padding: 0px;
+            font-size: 10px;
+            box-shadow: 0 0 10px #c2c2c2;
+        }
+
+        .eps {
+            padding: 0;
+            background-color: #fcfcfc;
+            position: absolute;
+            bottom: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            border-radius: 5px;
+            box-shadow: 0 0 10px #c2c2c2;
+            height: 110px;
+            width: 160px;
+        }
+
+        .slider {
+            padding: 10px;
+            background-color: #fcfcfc;
+            position: absolute;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 1000;
+            border-radius: 5px;
+            box-shadow: 0 0 10px #c2c2c2;
+        }
+
+        html, body {
+            height: 100%;
+        }
+    </style>
+</head>
+<div class="container-fluid h-100">
+    <div class="row justify-content-center h-100">
+        <div class="col-md-8 flex" id="map">
+            <div class="eps" id="epsContainer"></div>
+            <div class="slider" id="sliderContainer">
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="container">
+                <div class="row">
+                    <div class="card flex-fill title-card center">
+                        Final Project: SIEMulator<br>
+                        JHU EN.605.662 - Data Visualization<br>
+                        Summer 2025<br>
+                        Alexander Simakov
+                    </div>
+                    <div class="card flex-fill scroll">
+                        <div class="card-header">
+                            <table class="table table-hover table-responsive table-sm table-bordered">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Source Country</th>
+                                    <th scope="col" style="width: 20%">Count</th>
+                                </tr>
+                                </thead>
+                                <tbody id="source_table">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card flex-fill scroll">
+                        <div class="card-header">
+                            <table class="table table-hover table-responsive table-sm table-bordered">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Destination Country</th>
+                                    <th scope="col" style="width: 20%">Count</th>
+                                </tr>
+                                </thead>
+                                <tbody id="destination_table">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                    <div class="card flex-fill scroll">
+                        <div class="card-header">
+                            <table class="table table-hover table-responsive table-sm table-bordered">
+                                <thead>
+                                <tr>
+                                    <th scope="col">Event</th>
+                                    <th scope="col" style="width: 20%">Count</th>
+                                </tr>
+                                </thead>
+                                <tbody id="event_table">
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import events from "./mock_records.json" with {type: "json"};
+
+    const start_time = Math.min(...events.map(item => item.timestamp));
+    const end_time = Math.max(...events.map(item => item.timestamp));
+    let current_time = start_time;
+
+    const map = L.map("map", {
+        zoom: 2,
+        center: [0.0, 0.0]
+    });
+
+    let stats = {
+        "top_sources": {},
+        "top_destinations": {},
+        "top_events": {}
+    };
+
+
+    let sleep = function (ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+    }
+
+    let formatTimestamp = function (timestamp) {
+        return new Date(timestamp * 1000).toLocaleString();
+    }
+
+    let updateTimeDisplay = function () {
+        document.getElementById("timeDisplay").textContent = formatTimestamp(current_time);
+    }
+
+    let updateSlider = function () {
+        document.getElementById("timeSlider").value = current_time;
+        updateTimeDisplay();
+    }
+
+    let updateStats = function () {
+        const sourcesTable = document.getElementById("source_table");
+        while (sourcesTable.firstChild) {
+            sourcesTable.removeChild(sourcesTable.firstChild);
+        }
+        Object.keys(stats.top_sources).forEach(key => {
+            const row = document.createElement("tr");
+            row.innerHTML = `<td>${key}</td><td>${stats.top_sources[key]}</td>`;
+            sourcesTable.appendChild(row);
+        });
+
+        const destinationsTable = document.getElementById("destination_table");
+        while (destinationsTable.firstChild) {
+            destinationsTable.removeChild(destinationsTable.firstChild);
+        }
+        Object.keys(stats.top_destinations).forEach(key => {
+            const row = document.createElement("tr");
+            row.innerHTML = `<td>${key}</td><td>${stats.top_destinations[key]}</td>`;
+            destinationsTable.appendChild(row);
+        });
+
+        const eventTable = document.getElementById("event_table");
+        while (eventTable.firstChild) {
+            eventTable.removeChild(eventTable.firstChild);
+        }
+        Object.keys(stats.top_events).forEach(key => {
+            const row = document.createElement("tr");
+            row.innerHTML = `<td>${key}</td><td>${stats.top_events[key]}</td>`;
+            eventTable.appendChild(row);
+        });
+    }
+
+    let getStats = function () {
+        let currentBounds = map.getBounds();
+        let visibleMarkers = [];
+
+        clusterLayer.eachLayer(function (marker) {
+            if (currentBounds.contains(marker.getLatLng())) {
+                visibleMarkers.push(marker);
+            }
+        });
+
+        let sources = {};
+        let destinations = {};
+        let events = {};
+
+        visibleMarkers.forEach(item => {
+            if (item.customData.source_country in sources) {
+                sources[item.customData.source_country] += 1;
+            } else {
+                sources[item.customData.source_country] = 1;
+            }
+
+            if (item.customData.destination_country in destinations) {
+                destinations[item.customData.destination_country] += 1;
+            } else {
+                destinations[item.customData.destination_country] = 1;
+            }
+
+            if (item.customData.event in events) {
+                events[item.customData.event] += 1;
+            } else {
+                events[item.customData.event] = 1;
+            }
+        });
+
+        stats.top_sources = Object.fromEntries(Object.entries(sources).sort(([, a], [, b]) => b - a));
+        stats.top_destinations = Object.fromEntries(Object.entries(destinations).sort(([, a], [, b]) => b - a));
+        stats.top_events = Object.fromEntries(Object.entries(events).sort(([, a], [, b]) => b - a));
+        updateStats();
+    }
+
+    let GetRadius = function (zoom) {
+        return 100 - zoom * 10;
+    }
+
+    L.tileLayer("http://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png", {
+        noWrap: true,
+        maxZoom: 12,
+        minZoom: 2,
+        attribution: '&copy; <a href="http://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+    }).addTo(map);
+
+    let clusterLayer = L.markerClusterGroup({maxClusterRadius: GetRadius});
+
+    map.on("zoomend", getStats);
+    map.on("moveend", getStats);
+
+    document.getElementById("sliderContainer").innerHTML = `
+    <input type="range" id="timeSlider" min="${start_time}" max="${end_time}" value="${start_time}" style="width: 300px;">
+    <div id="timeDisplay" style="text-align: center; margin-top: 5px;"></div>`
+
+    let legend = L.control({position: "bottomright"});
+    legend.onAdd = function (map) {
+
+        let legend_div = L.DomUtil.create("div", "info legend");
+        legend_div.style.backgroundColor = "#fcfcfc";
+        legend_div.style.padding = "10px";
+        legend_div.style.borderRadius = "5px";
+        legend_div.style.boxShadow = "0 0 10px #ccc";
+        const labels = [];
+        const categories = ["Source IP", "Destination IP"];
+
+        legend_div.innerHTML +=
+            labels.push(
+                '<i class="circle" style="background: #ff6060"></i> ' +
+                categories[0]);
+        legend_div.innerHTML +=
+            labels.push(
+                '<i class="circle" style="background: #6c6cff"></i> ' +
+                categories[1]);
+        legend_div.innerHTML = labels.join("<br>");
+        return legend_div;
+    };
+    legend.addTo(map);
+
+    let legend2 = L.control({position: "bottomleft"});
+    legend2.onAdd = function (map) {
+
+        let legend_div = L.DomUtil.create("div", "info legend");
+        legend_div.style.backgroundColor = "#fcfcfc";
+        legend_div.style.padding = "10px";
+        legend_div.style.borderRadius = "5px";
+        legend_div.style.boxShadow = "0 0 10px #ccc";
+
+        const labels = [];
+
+        legend_div.innerHTML +=
+            labels.push(
+                '<i class="circle" style="background: rgba(110, 204, 57, 0.6)"></i> 2-10 events');
+        legend_div.innerHTML +=
+            labels.push(
+                '<i class="circle" style="background: rgba(240, 194, 12, 0.6)"></i> 11-100 events');
+        legend_div.innerHTML +=
+            labels.push(
+                '<i class="circle" style="background: rgba(241, 128, 23, 0.6)"></i> 100+ events');
+        legend_div.innerHTML = labels.join("<br>");
+        return legend_div;
+    };
+    legend2.addTo(map);
+
+    let chart = c3.generate({
+        bindto: "#epsContainer",
+        data: {
+            columns: [
+                ["Events per second", 0]
+            ],
+            type: "gauge"
+        },
+        gauge: {
+            label: {
+                format: function (value, ratio) {
+                    return value;
+                },
+                show: true
+            },
+            min: 0,
+            max: 5,
+            units: "",
+            width: 26 // for adjusting arc thickness
+        },
+        color: {
+            pattern: ["#60B044", "#F6C600", "#F97600", "#FF0000"],
+            threshold: {
+                unit: "value",
+                max: 5,
+                values: [1, 3, 5]
+            }
+        },
+        tooltip: {
+            show: false
+        }
+    });
+
+    function updateGauge(value) {
+        chart.load({
+            columns: [["Events per second", value]]
+        });
+        document.getElementById("epsContainer").style.position = "absolute";
+    }
+
+
+    while (current_time <= end_time) {
+        let events_filter = [];
+        let idx = events.findIndex(item => item.timestamp === current_time);
+        while (idx !== -1) {
+            events_filter.push(events[idx]);
+            events.splice(idx, 1);
+            idx = events.findIndex(item => item.timestamp === current_time);
+        }
+        updateGauge(events_filter.length);
+
+        events_filter.forEach(item => {
+            let source_circle = L.circleMarker([item.source_lat, item.source_lon], {
+                color: "red",
+                fillColor: "#ff6060",
+                opacity: 0.7,
+                radius: 2
+            });
+            source_circle.bindPopup("<b>Source IP</b>: " + item.source_ip + " (" + item.source_country + ")" + "<br><b>Destination IP</b>: " + item.destination_ip + " (" + item.destination_country + ")" + "<br><b>Event</b>: " + item.event);
+            source_circle.on("mouseover", function (ev) {
+                source_circle.openPopup();
+            });
+            source_circle.on("mouseout", function (ev) {
+                source_circle.closePopup();
+            });
+            source_circle.customData = item;
+            clusterLayer.addLayer(source_circle);
+
+            let destination_circle = L.circleMarker([item.destination_lat, item.destination_lon], {
+                color: "blue",
+                fillColor: "#6c6cff",
+                opacity: 0.7,
+                radius: 2
+            });
+            destination_circle.bindPopup("<b>Destination IP</b>: " + item.destination_ip + " (" + item.destination_country + ")" + "<br><b>Source IP:</b> " + item.source_ip + " (" + item.source_country + ")" + "<br><b>Event</b>: " + item.event);
+            destination_circle.on("mouseover", function (ev) {
+                destination_circle.openPopup();
+            });
+            destination_circle.on("mouseout", function (ev) {
+                destination_circle.closePopup();
+            });
+            destination_circle.customData = item;
+            clusterLayer.addLayer(destination_circle);
+        });
+        map.addLayer(clusterLayer);
+        getStats();
+        current_time++;
+        updateSlider();
+        await sleep(0.0);
+    }
+
+</script>
