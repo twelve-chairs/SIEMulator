@@ -39,7 +39,7 @@ EVENT_TYPES = [
 ]
 
 if __name__ == "__main__":
-    reader = geoip2.database.Reader('GeoLite2-City.mmdb')
+    reader = geoip2.database.Reader("GeoLite2-City.mmdb")
     fake = faker.Faker()
     data = []
     for i in range(EVENT_COUNT):
@@ -65,32 +65,8 @@ if __name__ == "__main__":
             data.append(record)
         except:
             continue
+
     data.sort(key=lambda x: x["timestamp"])
+
     with open("mock_records.json", 'w') as json_file:
-        json.dump(data, json_file, indent=4)
-
-    top_sources = {}
-    top_destinations = {}
-    top_events = {}
-
-    for record in data:
-        if record["source_country"] not in top_sources:
-            top_sources[record["source_country"]] = 1
-        else:
-            top_sources[record["source_country"]] += 1
-        if record["destination_country"] not in top_destinations:
-            top_destinations[record["destination_country"]] = 1
-        else:
-            top_destinations[record["destination_country"]] += 1
-        if record["event"] not in top_events:
-            top_events[record["event"]] = 1
-        else:
-            top_events[record["event"]] += 1
-
-    with open("mock_stats.json", 'w') as json_file:
-        data = {
-            "top_sources": dict(sorted(top_sources.items(), key=lambda item: item[1], reverse=True)),
-            "top_destinations": dict(sorted(top_destinations.items(), key=lambda item: item[1], reverse=True)),
-            "top_events": dict(sorted(top_events.items(), key=lambda item: item[1], reverse=True)),
-        }
         json.dump(data, json_file, indent=4)
