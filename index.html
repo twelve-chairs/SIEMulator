@@ -26,6 +26,10 @@
             integrity="sha512-+IpCthlNahOuERYUSnKFjzjdKXIbJ/7Dd6xvUp+7bEw0Jp2dg6tluyxLs+zq9BMzZgrLv8886T4cBSqnKiVgUw=="
             crossorigin="anonymous" referrerpolicy="no-referrer"></script>
 
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/7.0.0/css/all.min.css"
+          integrity="sha512-DxV+EoADOkOygM4IR9yXP8Sb2qwgidEmeqAEmDKIOfPRQZOWbXCzLC6vjbZyy0vPisbH2SyW27+ddLVCN+OMzQ=="
+          crossorigin="anonymous" referrerpolicy="no-referrer"/>
+
     <title>Final Project: SIEMulator</title>
     <style>
         .circle {
@@ -79,6 +83,17 @@
             z-index: 1000;
             border-radius: 5px;
             box-shadow: 0 0 10px #c2c2c2;
+        }
+
+        .btn-xs.btn-circle {
+            width: 20px;
+            height: 20px;
+            padding: 0;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
         }
 
         html, body {
@@ -155,7 +170,9 @@
 
     const start_time = Math.min(...events.map(item => item.timestamp));
     const end_time = Math.max(...events.map(item => item.timestamp));
-    let current_time = start_time;
+    let current_time = start_time.valueOf();
+
+    let timeline_running = true;
 
     const map = L.map("map", {
         zoom: 2,
@@ -272,8 +289,18 @@
     let clusterLayer = L.markerClusterGroup({maxClusterRadius: GetRadius});
 
     document.getElementById("sliderContainer").innerHTML = `
-    <input type="range" id="timeSlider" min="${start_time}" max="${end_time}" value="${start_time}" style="width: 300px;">
-    <div id="timeDisplay" style="text-align: center; margin-top: 5px;"></div>`
+   <input type="range" id="timeSlider" min="${start_time}" max="${end_time}" value="${current_time}" style="width: 300px;">
+    <div id="timeDisplay" style="text-align: center; margin-top: 5px;"></div><div> <button type="button" class="btn btn-secondary btn-xs btn-circle" id="timeSliderButton"><i class="fa-solid fa-pause"></i></button></div>`
+
+    document.getElementById("timeSliderButton").addEventListener("click", () => {
+        timeline_running = !timeline_running;
+        if (timeline_running === true) {
+            document.getElementById("timeSliderButton").innerHTML = "<i class=\"fa-solid fa-pause\"></i>";
+            main_loop();
+        } else {
+            document.getElementById("timeSliderButton").innerHTML = "<i class=\"fa-solid fa-play\"></i>";
+        }
+    });
 
     let legend = L.control({position: "bottomright"});
     legend.onAdd = function (map) {
@@ -357,22 +384,25 @@
         }
     });
 
-    function updateGauge(value) {
+    let updateGauge = function (value) {
         chart.load({
             columns: [["Events per second", value]]
         });
         document.getElementById("epsContainer").style.position = "absolute";
     }
 
-
-    while (current_time <= end_time) {
+    let main_loop = function () {
+        if (timeline_running === false) return;
         let events_filter = [];
+
         let idx = events.findIndex(item => item.timestamp === current_time);
         while (idx !== -1) {
             events_filter.push(events[idx]);
             events.splice(idx, 1);
             idx = events.findIndex(item => item.timestamp === current_time);
         }
+
+
         updateGauge(events_filter.length);
 
         events_filter.forEach(item => {
@@ -412,7 +442,9 @@
         getStats();
         current_time++;
         updateSlider();
-        await sleep(0.0);
+        setTimeout(main_loop, 0);
     }
+
+    main_loop();
 
 </script>
