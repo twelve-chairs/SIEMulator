@@ -176,7 +176,9 @@
 
     const map = L.map("map", {
         zoom: 2,
-        center: [0.0, 0.0]
+        center: [0.0, 0.0],
+        maxBounds: [[-90, -180],[90, 180]],
+      maxBoundsViscosity: 1,
     });
 
     let stats = {
@@ -184,11 +186,6 @@
         "top_destinations": {},
         "top_events": {}
     };
-
-
-    let sleep = function (ms) {
-        return new Promise(resolve => setTimeout(resolve, ms));
-    }
 
     let formatTimestamp = function (timestamp) {
         return new Date(timestamp * 1000).toLocaleString();
@@ -290,7 +287,18 @@
 
     document.getElementById("sliderContainer").innerHTML = `
    <input type="range" id="timeSlider" min="${start_time}" max="${end_time}" value="${current_time}" style="width: 300px;">
-    <div id="timeDisplay" style="text-align: center; margin-top: 5px;"></div><div> <button type="button" class="btn btn-secondary btn-xs btn-circle" id="timeSliderButton"><i class="fa-solid fa-pause"></i></button></div>`
+    <div id="timeDisplay" style="text-align: center; margin-top: 5px;"></div><div class="d-flex justify-content-center"><button type="button" class="btn btn-secondary btn-xs btn-circle" id="timeSliderButton"><i class="fa-solid fa-pause"></i></button></div>`
+
+    document.getElementById("timeSlider").addEventListener("mouseup", () => {
+        if (timeline_running === false) {
+            current_time = document.getElementById("timeSlider").value;
+            updateSlider();
+            clusterLayer.clearLayers();
+        }
+        else {
+            return;
+        }
+    });
 
     document.getElementById("timeSliderButton").addEventListener("click", () => {
         timeline_running = !timeline_running;
@@ -392,16 +400,27 @@
     }
 
     let main_loop = function () {
-        if (timeline_running === false) return;
-        let events_filter = [];
-
-        let idx = events.findIndex(item => item.timestamp === current_time);
-        while (idx !== -1) {
-            events_filter.push(events[idx]);
-            events.splice(idx, 1);
-            idx = events.findIndex(item => item.timestamp === current_time);
+        let events_copy = events;
+        if (timeline_running === false) {
+            getStats();
+            updateSlider();
+            return;
         }
 
+        if (current_time > end_time) {
+            clusterLayer.clearLayers();
+            current_time = start_time;
+            updateSlider();
+        }
+
+        let events_filter = [];
+
+        let idx = events_copy.findIndex(item => item.timestamp === current_time);
+        while (idx !== -1) {
+            events_filter.push(events[idx]);
+            events_copy.splice(idx, 1);
+            idx = events_copy.findIndex(item => item.timestamp === current_time);
+        }
 
         updateGauge(events_filter.length);
 
