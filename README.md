@@ -1,3 +1,6 @@
+![screenshot.png](screenshot.png)
+
+
 To run the program, please use
 
 ```shell 
